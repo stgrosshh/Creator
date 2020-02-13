@@ -1,0 +1,91 @@
+resources:
+    repositories:
+        - repository: DocuTheme
+          type: github
+          endpoint: Innoactive
+          name: Innoactive/Hub-Documentation-DocFx-Theme
+
+trigger:
+  branches:
+    include:
+      - master
+      - develop
+  paths:
+    include:
+    - '.Documentation/*'
+
+pr: none
+
+pool: SelfHosted
+
+variables:
+    - name: version
+      value: 2.0.0
+
+jobs:
+  - job:
+    workspace:
+        clean: all
+
+    steps:
+      - checkout: DocuTheme
+        lfs: true
+      - checkout: self
+        lfs: true
+
+      - powershell: |
+          $TAG = (git describe --all --match "v*").Split("-")[0].Replace("tags/", "").Replace("v", "")
+          Write-Host "##vso[task.setvariable variable=version]$TAG"
+        workingDirectory: 'Creator'
+        displayName: 'Parse build Tag'
+
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: 'Hub-Documentation-DocFx-Theme/'
+          Contents: '**'
+          TargetFolder: 'Creator/.Documentation/theme'
+        displayName: Copy Theme
+
+      - task: Npm@1
+        inputs:
+          command: 'custom'
+          workingDir: 'Creator/.Documentation/theme'
+          customCommand: 'install'
+        displayName: Prepare Theme
+
+      - task: Npm@1
+        inputs:
+          command: 'custom'
+          workingDir: 'Creator/.Documentation/theme'
+          customCommand: 'run build'
+        displayName: Build Theme
+
+      - task: NuGetCommand@2
+        inputs:
+          command: 'custom'
+          arguments: 'install docfx.console -Version 2.48.1'
+        displayName: Installing DocFx
+
+      - script: docfx.console.2.48.1\tools\docfx.exe Creator\.Documentation\docfx.json
+        displayName: "Building Documentation"
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: 'Creator/.Documentation/_site'
+          artifact: 'documentation'
+          publishLocation: 'pipeline'
+        displayName: Store Documentation
+
+      # Only upload data if this was merged onto master
+      - task: FtpUpload@2
+        condition: eq(variables['Build.SourceBranchName'], 'master')
+        inputs:
+          credentialsOption: 'serviceEndpoint'
+          serverEndpoint: 'FTP Documentation Server'
+          rootDirectory: 'Creator/.Documentation/_site'
+          filePatterns: '**'
+          remoteDirectory: 'training.hub.innoactive.de/docs/v$(version)/'
+          clean: false
+          cleanContents: false
+          preservePaths: true
+          trustSSL: false 
