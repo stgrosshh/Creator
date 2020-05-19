@@ -16,7 +16,7 @@ trigger:
 
 pr: none
 
-pool: SelfHosted
+pool: Unity
 
 variables:
     - name: version
