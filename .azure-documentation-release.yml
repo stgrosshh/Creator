@@ -12,15 +12,16 @@ trigger:
       - develop
   paths:
     include:
-    - '.Documentation/*'
+      - '.Documentation/*'
 
 pr: none
 
-pool: Unity
+parameters:
+- name: release
+  type: boolean
+  default: false
 
-variables:
-    - name: version
-      value: 2.0.0
+pool: Unity
 
 jobs:
   - job:
@@ -34,8 +35,8 @@ jobs:
         lfs: true
 
       - powershell: |
-          $TAG = (git describe --all --match "v*").Split("-")[0].Replace("tags/", "").Replace("v", "")
-          Write-Host "##vso[task.setvariable variable=version]$TAG"
+          $TAG = (git describe --all --match "v*").Split("-")[0].Replace("tags/", "").TrimStart("v")
+          Write-Host "##vso[task.setvariable variable=Version]$TAG"
         workingDirectory: 'Creator'
         displayName: 'Parse build Tag'
 
@@ -76,15 +77,15 @@ jobs:
           publishLocation: 'pipeline'
         displayName: Store Documentation
 
-      # Only upload data if this was merged onto master
       - task: FtpUpload@2
-        condition: eq(variables['Build.SourceBranchName'], 'master')
+        displayName: "Uploading to server"
+        condition: or(eq(variables['Build.SourceBranchName'], 'master'), ${{ parameters.release }})
         inputs:
           credentialsOption: 'serviceEndpoint'
           serverEndpoint: 'FTP Documentation Server'
           rootDirectory: 'Creator/.Documentation/_site'
           filePatterns: '**'
-          remoteDirectory: 'training.hub.innoactive.de/docs/v$(version)/'
+          remoteDirectory: 'training.hub.innoactive.de/docs/v$(Version)/'
           clean: false
           cleanContents: false
           preservePaths: true
