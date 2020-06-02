@@ -3,11 +3,14 @@ using System;
 namespace Innoactive.CreatorEditor.TestTools
 {
     /// <summary>
-    /// Event args for event which is fired when Editor IMGUI test finishes it's execution.
+    /// Event args for event which is fired when a <see cref="IEditorImguiTest"/> test finishes it's execution.
     /// </summary>
     internal class EditorImguiTestFinishedEventArgs : EventArgs
     {
-        public TestState Result { get; private set; }
+        /// <summary>
+        /// Result from last <see cref="IEditorImguiTest"/>.
+        /// </summary>
+        public TestState Result { get; }
 
         public EditorImguiTestFinishedEventArgs(TestState result)
         {

@@ -7,7 +7,7 @@ namespace Innoactive.CreatorEditor.ImguiTester
     /// </summary>
     internal class UserActionsRecordNotFoundException : FileNotFoundException
     {
-        public UserActionsRecordNotFoundException(string message, params object[] formatArgs) : base(string.Format(message, formatArgs))
+        internal UserActionsRecordNotFoundException(string message, params object[] formatArgs) : base(string.Format(message, formatArgs))
         {
         }
     }
