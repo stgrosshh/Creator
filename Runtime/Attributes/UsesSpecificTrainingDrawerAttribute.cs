@@ -9,7 +9,10 @@ namespace Innoactive.Creator.Core.Attributes
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public class UsesSpecificTrainingDrawerAttribute : Attribute
     {
-        public string DrawerType { get; private set; }
+        /// <summary>
+        /// The drawer's type.
+        /// </summary>
+        public string DrawerType { get; }
 
         public UsesSpecificTrainingDrawerAttribute(string drawerType)
         {
