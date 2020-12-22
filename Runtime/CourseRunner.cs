@@ -13,6 +13,9 @@ namespace Innoactive.Creator.Core
     {
         private class CourseRunnerInstance : MonoBehaviour
         {
+            /// <summary>
+            /// Reference to the currently used <see cref="ICourse"/>.
+            /// </summary>
             public ICourse course = null;
 
             private void HandleModeChanged(object sender, ModeChangedEventArgs args)
@@ -20,6 +23,7 @@ namespace Innoactive.Creator.Core
                 if (course != null)
                 {
                     course.Configure(args.Mode);
+                    RuntimeConfigurator.Configuration.StepLockHandling.Configure(RuntimeConfigurator.Configuration.Modes.CurrentMode);
                 }
             }
 
@@ -49,9 +53,13 @@ namespace Innoactive.Creator.Core
                 if (course.LifeCycle.Stage == Stage.Active)
                 {
                     course.LifeCycle.Deactivate();
+                    RuntimeConfigurator.Configuration.StepLockHandling.OnCourseFinished(course);
                 }
             }
 
+            /// <summary>
+            /// Starts the <see cref="ICourse"/>.
+            /// </summary>
             public void Execute()
             {
                 RuntimeConfigurator.ModeChanged += HandleModeChanged;
@@ -59,6 +67,8 @@ namespace Innoactive.Creator.Core
                 course.LifeCycle.StageChanged += HandleCourseStageChanged;
                 course.Configure(RuntimeConfigurator.Configuration.Modes.CurrentMode);
 
+                RuntimeConfigurator.Configuration.StepLockHandling.Configure(RuntimeConfigurator.Configuration.Modes.CurrentMode);
+                RuntimeConfigurator.Configuration.StepLockHandling.OnCourseStarted(course);
                 course.LifeCycle.Activate();
             }
         }
@@ -93,7 +103,7 @@ namespace Innoactive.Creator.Core
         /// <param name="course">The course which should be run.</param>
         public static void Initialize(ICourse course)
         {
-            instance = new GameObject("[TRAINING_RUNNER]").AddComponent<CourseRunnerInstance>();
+            instance = instance == null ? new GameObject("[TRAINING_RUNNER]").AddComponent<CourseRunnerInstance>() : instance;
             instance.course = course;
         }
 
@@ -127,7 +137,7 @@ namespace Innoactive.Creator.Core
         }
 
         /// <summary>
-        /// Starts the course.
+        /// Starts the <see cref="ICourse"/>.
         /// </summary>
         public static void Run()
         {

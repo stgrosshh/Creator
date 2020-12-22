@@ -5,6 +5,11 @@ resources:
     endpoint: Innoactive
     name: Innoactive/Empty-Unity-Project-2019
     ref: develop
+  - repository: Templates
+    type: github
+    endpoint: Innoactive
+    name: Innoactive/Creator-Azure-Templates
+    ref: master
 
 trigger:
     - master
@@ -48,29 +53,6 @@ stages:
       - checkout: self
         lfs: true
 
-      - task: UseNode@1
-
-      - task: PowerShell@2
-        displayName: "Run Semantic release"
-        condition: eq(variables['Build.SourceBranchName'], 'master')
-        inputs:
-          targetType: 'inline'
-          script: |
-            npx -p semantic-release-ado semantic-release
-          workingDirectory: "Creator/"
-        env:
-          GH_TOKEN: "$(GITHUB_TOKEN)"
-
-      - task: PowerShell@2
-        displayName: Fetch version from git
-        condition: ne(variables['Build.SourceBranchName'], 'master')
-        inputs:
-          targetType: 'inline'
-          script: |
-            $TAG = (git describe --all --match "v*").Replace("tags/", "").TrimStart("v")
-            Write-Host "##vso[task.setvariable variable=Version]$TAG"
-          workingDirectory: "Creator/"
-
       - task: CopyFiles@2
         inputs:
           SourceFolder: 'Empty-Unity-Project-2019/'
@@ -84,11 +66,6 @@ stages:
           Contents: '**'
           TargetFolder: '$(Path.Creator)/Core'
         displayName: Copy Creator Core
-
-      - task: DeleteFiles@1
-        inputs:
-          Contents: '!(Project)'
-        displayName: Clean Up
 
       - task: PowerShell@2
         displayName: Build Project
@@ -104,13 +81,53 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            u3d run -u $(UnityVersion) -- -logFile $(Build.ArtifactStagingDirectory)/logs/editor_editmode_tests.log -batchmode -runTests -testPlatform editmode -testResults $(System.DefaultWorkingDirectory)\TEST-EditMode.xml
-            u3d run -u $(UnityVersion) -- -logFile $(Build.ArtifactStagingDirectory)/logs/editor_playmode_tests.log -batchmode -runTests -testPlatform playmode -testResults $(System.DefaultWorkingDirectory)\TEST-PlayMode.xml
+            u3d run -u $(UnityVersion) -- -projectPath '$(Path.Project)' -logFile $(Build.ArtifactStagingDirectory)/logs/editor_editmode_tests.log -batchmode -runTests -testPlatform editmode -testResults $(System.DefaultWorkingDirectory)\TEST-EditMode.xml
+            u3d run -u $(UnityVersion) -- -projectPath '$(Path.Project)' -logFile $(Build.ArtifactStagingDirectory)/logs/editor_playmode_tests.log -batchmode -runTests -testPlatform playmode -testResults $(System.DefaultWorkingDirectory)\TEST-PlayMode.xml
 
       - task: PublishTestResults@2
         inputs:
             testResultsFormat: "NUnit"
             testResultsFiles: "TEST-*.xml"
+
+      - task: UseNode@1
+
+      - task: PowerShell@2
+        displayName: "Run Semantic release"
+        condition: eq(variables['Build.SourceBranchName'], 'master')
+        inputs:
+          targetType: 'inline'
+          script: |
+            npx -p semantic-release-ado semantic-release
+          workingDirectory: "Creator/"
+        env:
+          GH_TOKEN: "$(GITHUB_TOKEN)"
+  
+      - template: replace-string.yml@Templates
+        parameters:
+          FilePathInCreator: 'Core/Editor/Analytics/GoogleTracker.cs'
+          OldString: '$(DEV_TRACKING_ID)'
+          NewString: '$(LIVE_TRACKING_ID)'
+          Condition: eq(variables['Build.SourceBranchName'], 'master')
+
+      - task: PowerShell@2
+        displayName: Fetch version from git
+        condition: ne(variables['Build.SourceBranchName'], 'master')
+        inputs:
+          targetType: 'inline'
+          script: |
+            $TAG = (git tag -l "v*" --sort=committerdate | Select -last 1)
+            if(!$TAG) { $TAG = "v0.0.0" }
+            $TAG = $TAG.TrimStart("v") + "-" + (git log -1 --pretty=format:%h)
+            Write-Host "##vso[task.setvariable variable=Version]$TAG"
+          workingDirectory: "Creator/"
+
+      - task: PowerShell@2
+        displayName: Publish variables
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo "##vso[task.setvariable variable=Version;isOutput=true]v$(Version)"
+        name: ExportedVariables
 
       - task: PowerShell@2
         displayName: Export Unity package
@@ -118,8 +135,8 @@ stages:
           targetType: 'inline'
           script: |
             echo 'Exporting version $(Version)'
-            ((Get-Content -path $(Path.ExportConfig)/$(ExportConfigName) -Raw) -replace '{version}','$(Version)') | Set-Content -Path $(Path.Project)/export-config.json
-            u3d run -u $(UnityVersion) -- -logFile $(Build.ArtifactStagingDirectory)/logs/editor_export.log -batchmode -quit -executeMethod Innoactive.CreatorEditor.PackageExporter.Export --export-config export-config.json
+            ((Get-Content -path $(Path.ExportConfig)/$(ExportConfigName) -Raw) -replace '{version}','v$(Version)') | Set-Content -Path $(Path.Project)/export-config.json
+            u3d run -u $(UnityVersion) -- -projectPath '$(Path.Project)' -logFile $(Build.ArtifactStagingDirectory)/logs/editor_export.log -batchmode -quit -executeMethod Innoactive.CreatorEditor.PackageExporter.Export --export-config export-config.json
             Start-Sleep -s 5
 
       - task: PublishPipelineArtifact@1
@@ -132,9 +149,10 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: "Publish Logs"
         condition: always()
+        continueOnError: true
         inputs:
             targetPath: "$(Build.ArtifactStagingDirectory)/logs/"
-            artifact: "creator-core-logs"
+            artifact: "creator-core-logs-$(System.JobId)"
             publishLocation: "pipeline"
 
   - stage: Release
@@ -142,7 +160,7 @@ stages:
     dependsOn: 
       - Lint
       - Build
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))    
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
     jobs:
       - job:
         workspace:

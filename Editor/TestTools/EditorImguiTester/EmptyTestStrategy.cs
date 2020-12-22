@@ -8,6 +8,8 @@ namespace Innoactive.CreatorEditor.TestTools
     /// </summary>
     internal class EmptyTestStrategy : IEditingStrategy
     {
+        public ICourse CurrentCourse { get; }
+
         /// <inheritdoc/>
         public void HandleNewCourseWindow(CourseWindow window)
         {
@@ -65,6 +67,16 @@ namespace Innoactive.CreatorEditor.TestTools
 
         /// <inheritdoc/>
         public void HandleProjectIsGoingToSave()
+        {
+        }
+
+        /// <inheritdoc/>
+        public void HandleExitingPlayMode()
+        {
+        }
+
+        /// <inheritdoc/>
+        public void HandleEnterPlayMode()
         {
         }
     }

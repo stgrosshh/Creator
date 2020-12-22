@@ -1,9 +1,9 @@
-﻿using System.IO;
-using Innoactive.Creator.Core;
+﻿using Innoactive.Creator.Core;
 using Innoactive.Creator.Core.Configuration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+
 namespace Innoactive.CreatorEditor.UI.Windows
 {
     /// <summary>
@@ -12,9 +12,11 @@ namespace Innoactive.CreatorEditor.UI.Windows
     internal class CourseCreationWizard : EditorWindow
     {
         private static CourseCreationWizard window;
-        private const string menuPath = "Innoactive/Creator/Create New Course...";
 
-        [MenuItem(menuPath, false, 12)]
+        // CourseCreationWizard is obsolete and was replaced by CreatorSetupWizard
+#if !UNITY_2019_4_OR_NEWER || UNITY_EDITOR_OSX
+        [MenuItem("Innoactive/Create New Course...")]
+#endif
         private static void ShowWizard()
         {
             if (window == null)
@@ -58,7 +60,7 @@ namespace Innoactive.CreatorEditor.UI.Windows
 
             if (RuntimeConfigurator.Exists == false)
             {
-                EditorGUILayout.HelpBox("The current scene is not a training scene. No course can be created. To automatically setup the scene, select \"Innoactive > Training > Setup Current Scene as Training Scene\".", MessageType.Error);
+                EditorGUILayout.HelpBox("The current scene is not a training scene. No course can be created. To automatically setup the scene, select \"Innoactive > Setup Training Scene\".", MessageType.Error);
             }
 
             EditorGUI.BeginDisabledGroup(RuntimeConfigurator.Exists == false);
@@ -75,7 +77,7 @@ namespace Innoactive.CreatorEditor.UI.Windows
             {
                 if (CourseAssetUtils.CanCreate(courseName, out errorMessage))
                 {
-                    CourseAssetManager.Import(new Course(courseName, new Chapter("Chapter 1", null)));
+                    CourseAssetManager.Import(EntityFactory.CreateCourse(courseName));
                     RuntimeConfigurator.Instance.SetSelectedCourse(CourseAssetUtils.GetCourseStreamingAssetPath(courseName));
                     EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
                     GlobalEditorHandler.SetCurrentCourse(courseName);

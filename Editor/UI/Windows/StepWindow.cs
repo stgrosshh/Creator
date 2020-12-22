@@ -1,16 +1,22 @@
-﻿using Innoactive.Creator.Core;
-using Innoactive.CreatorEditor.UI.Drawers;
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+using Innoactive.Creator.Core;
+using Innoactive.CreatorEditor.Tabs;
+using Innoactive.CreatorEditor.UI.Drawers;
+using Innoactive.CreatorEditor.Configuration;
 
 namespace Innoactive.CreatorEditor.UI.Windows
 {
-    /// <inheritdoc />
     /// <summary>
-    /// Step Inspector window of workflow editor.
+    /// This class draws the Step Inspector.
     /// </summary>
     internal class StepWindow : EditorWindow
     {
+        private const int border = 4;
+
         private IStep step;
 
         [SerializeField]
@@ -49,9 +55,22 @@ namespace Innoactive.CreatorEditor.UI.Windows
             Repaint();
         }
 
+        private void OnFocus()
+        {
+            if (step?.Data == null)
+            {
+                return;
+            }
+
+            if (EditorConfigurator.Instance.Validation.IsAllowedToValidate())
+            {
+                EditorConfigurator.Instance.Validation.Validate(step.Data, GlobalEditorHandler.GetCurrentCourse());
+            }
+        }
+
         private void OnGUI()
         {
-            titleContent = new GUIContent("Step Editor");
+            titleContent = new GUIContent("Step Inspector");
 
             if (step == null)
             {
@@ -62,14 +81,16 @@ namespace Innoactive.CreatorEditor.UI.Windows
 
             stepRect.width = position.width;
 
-            if (stepRect.height > position.height - EditorGUIUtility.singleLineHeight)
+            if (stepRect.height > position.height)
             {
                 stepRect.width -= GUI.skin.verticalScrollbar.fixedWidth;
             }
 
             scrollPosition = GUI.BeginScrollView(new Rect(0, 0, position.width, position.height), scrollPosition, stepRect, false, false);
             {
-                stepRect = drawer.Draw(stepRect, step, ModifyStep, "Step");
+                Rect stepDrawingRect = new Rect(stepRect.position + new Vector2(border, border), stepRect.size - new Vector2(border * 2f, border * 2f));
+                stepDrawingRect = drawer.Draw(stepDrawingRect, step, ModifyStep, "Step");
+                stepRect = new Rect(stepDrawingRect.position - new Vector2(border,border), stepDrawingRect.size + new Vector2(border * 2f, border * 2f));
             }
             GUI.EndScrollView();
         }
@@ -83,6 +104,25 @@ namespace Innoactive.CreatorEditor.UI.Windows
         public void SetStep(IStep newStep)
         {
             step = newStep;
+        }
+
+        public IStep GetStep()
+        {
+            return step;
+        }
+
+        internal void ResetStepView()
+        {
+            if (EditorUtils.IsWindowOpened<StepWindow>() == false || step == null)
+            {
+                return;
+            }
+
+            Dictionary<string, object> dict = step.Data.Metadata.GetMetadata(typeof(TabsGroup));
+            if (dict.ContainsKey(TabsGroup.SelectedKey))
+            {
+                dict[TabsGroup.SelectedKey] = 0;
+            }
         }
     }
 }

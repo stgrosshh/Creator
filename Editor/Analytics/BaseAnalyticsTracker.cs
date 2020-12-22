@@ -11,37 +11,27 @@ namespace Innoactive.CreatorEditor.Analytics
     {
         public const string KeySessionId = "Innoactive.Creator.Analytics.SessionID";
 
-        private string sessionId;
-        public string SessionId
-        {
-            get
-            {
-                if (sessionId == null)
-                {
-                    SetSessionId();
-                }
+        public string SessionId { get; }
 
-                return sessionId;
+        internal BaseAnalyticsTracker()
+        {
+            if (EditorPrefs.HasKey(KeySessionId))
+            {
+                SessionId = EditorPrefs.GetString(KeySessionId);
+            }
+            else
+            {
+                SessionId = Guid.NewGuid().ToString();
             }
         }
 
         public abstract void Send(AnalyticsEvent data);
 
+        public abstract void SendSessionStart();
+
         protected string GetLanguage()
         {
             return CultureInfo.InstalledUICulture.Name;
-        }
-
-        protected string SetSessionId()
-        {
-            sessionId = EditorPrefs.GetString(KeySessionId, null);
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                sessionId = Guid.NewGuid().ToString();
-                EditorPrefs.SetString(KeySessionId, sessionId);
-            }
-
-            return sessionId;
         }
     }
 }

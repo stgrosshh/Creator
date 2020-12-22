@@ -31,7 +31,18 @@ namespace Innoactive.CreatorEditor
         public static void Export()
         {
             PackageExporterArguments args = ParseCommandLineArguments();
-            Export(args.Config);
+            try
+            {
+                Export(args.Config);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+            }
         }
 
         public static void Export(string configPath)
@@ -70,7 +81,9 @@ namespace Innoactive.CreatorEditor
             }
 
             string[] exportedPaths = GetAssetPathsToExport(config);
+            Debug.LogFormat("Exporting {0} paths to {1}", exportedPaths.Length, outputDirectory);
             AssetDatabase.ExportPackage(exportedPaths, config.OutputPath.Replace('/', '\\'), ExportPackageOptions.Default);
+            Debug.Log("Export completed");
         }
 
         private static string[] GetAssetPathsToExport(ExportConfig config)

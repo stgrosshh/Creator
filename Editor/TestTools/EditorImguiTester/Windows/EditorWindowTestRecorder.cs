@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Innoactive.CreatorEditor.ImguiTester;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -15,13 +14,26 @@ namespace Innoactive.CreatorEditor.TestTools
     /// </summary>
     internal class EditorWindowTestRecorder : EditorWindow
     {
-        private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings {Converters = new List<JsonConverter> {new ImguiEventConverter()}};
+        private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings
+        {
+            Converters = new List<JsonConverter>
+            {
+                new ImguiEventConverter()
+            }
+        };
+
         private readonly IList<UserAction> userActions = new List<UserAction>();
         private IEditorImguiTest test;
         private EditorWindow recordedWindow;
 
+        /// <summary>
+        /// True if this <see cref="EditorWindowTestRecorder"/> is currently recording a <see cref="IEditorImguiTest"/>.
+        /// </summary>
         public static bool IsRecording { get; private set; }
 
+        /// <summary>
+        /// Starts recording given <paramref name="test"/>.
+        /// </summary>
         public void StartRecording(IEditorImguiTest test)
         {
             IsRecording = true;
@@ -82,10 +94,7 @@ namespace Innoactive.CreatorEditor.TestTools
             {
                 IsRecording = false;
 
-                if (file != null)
-                {
-                    file.Close();
-                }
+                file?.Close();
 
                 if (recordedWindow != null)
                 {
@@ -96,6 +105,26 @@ namespace Innoactive.CreatorEditor.TestTools
 
                 Close();
             }
+        }
+
+        private bool ShouldRecordEvent()
+        {
+            if (Event.current.type == EventType.Layout)
+            {
+                return false;
+            }
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                return false;
+            }
+
+            if (Event.current.isMouse && recordedWindow.position.Contains(Event.current.mousePosition + recordedWindow.position.position) == false)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void OnGUI()
@@ -124,11 +153,7 @@ namespace Innoactive.CreatorEditor.TestTools
 
                 if (Event.current.type != EventType.Used)
                 {
-                    if (Event.current.type == EventType.Layout || Event.current.type == EventType.Repaint)
-                    {
-                        onGui.Invoke(recordedWindow, new object[0]);
-                    }
-                    else if (Event.current.isMouse == false || recordedWindow.position.Contains(Event.current.mousePosition + recordedWindow.position.position))
+                    if (ShouldRecordEvent())
                     {
                         if (userActions.Any())
                         {
@@ -137,10 +162,20 @@ namespace Innoactive.CreatorEditor.TestTools
                         }
 
                         Event toRecord = JsonConvert.DeserializeObject<Event>(JsonConvert.SerializeObject(Event.current, serializerSettings), serializerSettings);
-                        userActions.Add(new UserAction {Event = toRecord});
 
-                        onGui.Invoke(recordedWindow, new object[0]);
+                        UserAction userActionToRecord = new UserAction { Event = toRecord };
+
+                        if (ShouldReplaceLastUserAction())
+                        {
+                            userActions[userActions.Count - 1] = userActionToRecord;
+                        }
+                        else
+                        {
+                            userActions.Add(userActionToRecord);
+                        }
                     }
+
+                    onGui.Invoke(recordedWindow, new object[0]);
                 }
 
                 Focus();
@@ -156,6 +191,51 @@ namespace Innoactive.CreatorEditor.TestTools
 
                 Close();
                 throw;
+            }
+        }
+
+        private bool ShouldReplaceLastUserAction()
+        {
+            if (userActions.Any() == false)
+            {
+                return false;
+            }
+
+            if (userActions.Last().Event.type != EventType.KeyDown)
+            {
+                return false;
+            }
+
+            if (Event.current.type != EventType.ValidateCommand && Event.current.type != EventType.ExecuteCommand)
+            {
+                return false;
+            }
+
+            Event lastEvent = userActions.Last().Event;
+
+            if (lastEvent.control || lastEvent.command)
+            {
+                switch (Event.current.commandName)
+                {
+                    case "Paste" when lastEvent.keyCode == KeyCode.V:
+                    case "Copy" when lastEvent.keyCode == KeyCode.C:
+                    case "Cut" when lastEvent.keyCode == KeyCode.X:
+                    case "Duplicate" when lastEvent.keyCode == KeyCode.D:
+                    case "Find" when lastEvent.keyCode == KeyCode.F:
+                    case "SelectAll" when lastEvent.keyCode == KeyCode.A:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            switch (Event.current.commandName)
+            {
+                case "Delete" when lastEvent.keyCode == KeyCode.Delete:
+                case "SoftDelete" when lastEvent.keyCode == KeyCode.Delete:
+                    return true;
+                default:
+                    return false;
             }
         }
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Net.Http;
+﻿using System.Net.Http;
 using UnityEngine;
 
 namespace Innoactive.CreatorEditor.Analytics
@@ -10,7 +8,9 @@ namespace Innoactive.CreatorEditor.Analytics
     /// </summary>
     internal class GoogleTracker : BaseAnalyticsTracker
     {
-        private readonly HttpClient webClient = new HttpClient();
+        private readonly HttpClient client = new HttpClient();
+
+        private readonly string agent = $"Unity-{Application.unityVersion}";
 
         public override void Send(AnalyticsEvent data)
         {
@@ -19,7 +19,10 @@ namespace Innoactive.CreatorEditor.Analytics
 
         private void PostData(string uri)
         {
-            webClient.GetAsync(uri);
+            if (AnalyticsUtils.GetTrackingState() == AnalyticsState.Enabled)
+            {
+                client.GetAsync(uri);
+            }
         }
 
         private string BuildEventUri(AnalyticsEvent data)
@@ -28,10 +31,22 @@ namespace Innoactive.CreatorEditor.Analytics
             return string.Format(uri, data.Category, data.Action, data.Label);
         }
 
+        public override void SendSessionStart()
+        {
+            PostData(GetBaseUri() + "&sc=start");
+        }
+
         private string GetBaseUri()
         {
-            string baseUri = "https://www.google-analytics.com/collect?v=1&tid=UA-109665637-8&cid={0}&aip=1&npa=1&ul={1}&an=Creator&av={2}";
-            return string.Format(baseUri, SessionId, GetLanguage(), EditorUtils.GetCoreVersion());
+
+            string baseUri = "https://www.google-analytics.com/collect?v=1&tid=UA-109665637-9&cid={0}&aip=1&npa=1&ul={1}&an=Creator&av={2}&ua={3}&ds=unity";
+#if CREATOR_PRO
+            if (CreatorPro.Account.UserAccount.IsAccountLoggedIn())
+            {
+                baseUri += $"&uid={CreatorPro.Account.UserAccount.GetId()}";
+            }
+#endif
+            return string.Format(baseUri, SessionId, GetLanguage(), EditorUtils.GetCoreVersion(), agent);
         }
     }
 }

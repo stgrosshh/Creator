@@ -10,20 +10,20 @@ using Innoactive.Creator.Core.EntityOwners.ParallelEntityCollection;
 namespace Innoactive.Creator.Core
 {
     /// <summary>
-    /// A collection of transitions.
+    /// A collection of <see cref="ITransition"/>s.
     /// </summary>
     [DataContract(IsReference = true)]
     public class TransitionCollection : Entity<TransitionCollection.EntityData>, ITransitionCollection
     {
         /// <summary>
-        /// The data class of the transitions' collection.
+        /// The data class of the <see cref="ITransition"/>s' collection.
         /// </summary>
         [DataContract(IsReference = true)]
         public class EntityData : EntityCollectionData<ITransition>, ITransitionCollectionData
         {
             ///<inheritdoc />
             [DataMember]
-            [DisplayName("Transitions"), Separated, Foldable, KeepPopulated(typeof(Transition)), ListOf(typeof(FoldableAttribute), typeof(DeletableAttribute), typeof(SeparatedAttribute)), ExtendableList]
+            [DisplayName(""), KeepPopulated(typeof(Transition)), ReorderableListOf(typeof(FoldableAttribute), typeof(DeletableAttribute)), ExtendableList]
             public virtual IList<ITransition> Transitions { get; set; }
 
             ///<inheritdoc />

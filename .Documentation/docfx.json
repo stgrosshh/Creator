@@ -39,7 +39,13 @@
             "_appTitle": "Innoactive Creator Documentation",
             "_enableNewTab": true,
             "_enableSearch": true,
-            "_disableBreadcrumb": true
+            "_disableBreadcrumb": true,
+            "_gaTrackingId": "-1",
+            "_version": "v1.0.0",
+            "_gitContribute": {
+                "repo": "https://github.com/Innoactive/Creator",
+                "branch": "develop"
+            }
         },
         "globalMetadataFiles": [],
         "fileMetadataFiles": [],

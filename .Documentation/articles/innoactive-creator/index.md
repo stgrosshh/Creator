@@ -3,7 +3,7 @@
 ## User Interface
 
 - [Training Course Creation Wizard](course-creation-wizard.md)
-- [Workflow Editor](workflow-editor.md)
+- [Workflow Window](workflow-window.md)
 - [Step Inspector](step-inspector.md)
 
 ## Components
@@ -12,3 +12,8 @@
 - [Training Scene Objects and Training Properties](training-scene-object.md)
 - [Default Behaviors](default-behaviors.md)
 - [Default Conditions](default-conditions.md)
+- [Suspending Interactions](suspending-interactions.md)
+
+## Examples
+
+- [Examples Description](examples.md)

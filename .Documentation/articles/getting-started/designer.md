@@ -15,17 +15,13 @@ You can look up examples as described in [the evaluator's guide](evaluator.md).
 
 ### Create a new Unity Project
 
-Create a [new project](../miscellaneous/unity-setup.md) in Unity.
-
-### Prerequisites
-
-Make sure that your setup satisfies the [prerequisites](../miscellaneous/prerequisites.md).
+ Follow the [instructions](../setup-guides/index.md) to create a new project in Unity.
 
 ### Import the Training Template
 
-A template is a copy of the `Innoactive Creator` adjusted to the needs of your company or project. Normally, you would receive a `.unitypackage` with it from a template developer; in this tutorial we will use `Innoactive Base Template` instead. Download it from the [Innoactive Developer Portal](http://developers.innoactive.de/creator/releases/): scroll down to the `Innoactive Creator` section, click `Download` button for the latest version and pick the `Innoactive-Creator-vX.Y.Z-Unity-XR.unitypackage`.
+A template is a copy of the `Innoactive Creator` adjusted to the needs of your company or project. Normally, you would receive a `.unitypackage` with it from a template developer. In this tutorial we will use the `Innoactive Base Template` instead. Open the [Innoactive Developer Portal](http://developers.innoactive.de/creator/releases/), scroll down to the `Innoactive Creator` section and click the `Download` button for the latest version.
 
-Locate the downloaded `.unitypackage` with a file explorer and drag and drop it into the `Project` tab in the Unity Editor. The `Import Unity Package` window will pop up; click `All` and then `Import`.
+Locate the downloaded `.unitypackage` with a file explorer and drag and drop it into the `Project` tab in the Unity Editor. The `Import Unity Package` window will pop up. Click `All` and then `Import`.
 
 ### Setup the Scene
 
@@ -85,15 +81,15 @@ A transition may contain multiple conditions. With conditions, you can define wh
 
 #### Training Course Creation Wizard
 
-To create a training course, select the `Innoactive > Creator > Create New Course...` menu option. This will open the Training Creation Wizard. Type the name of your training and press the `Create` button.
+To create a training course, in the top menu bar, select the `Innoactive > Create New Course...` menu option. This will open the Training Creation Wizard. Type the name of your training and press the `Create` button.
 
 The created training course will be set as the selected one for the current scene.
 
 > Learn more about the [Training Course Creation Wizard](../innoactive-creator/course-creation-wizard.md).
 
-#### Workflow Editor
+#### Workflow Window
 
-Now the [Workflow Editor](../innoactive-creator/workflow-editor.md) is open and you can view and modify your training course. On the left, the list of chapters is displayed. You can use as many as you want, but let us stick to a single one in this tutorial. You can see the chapter workflow on the right. An empty chapter has only a starting point.
+Now the [Workflow window](../innoactive-creator/workflow-window.md) is open and you can view and modify your training course. On the left, the list of chapters is displayed. You can use as many as you want, but let us stick to a single one in this tutorial. You can see the chapter workflow on the right. An empty chapter has only a starting point.
 
 To add a step, click with the right mouse button anywhere on the empty area and choose the `Add step` option. To remove a step, click on the step with the right mouse button and choose the `Delete` option. You can drag a step around the canvas with the left mouse button.
 
@@ -109,13 +105,13 @@ Now, click on the first step to open it in the [Step Inspector](../innoactive-cr
 
 #### Step Inspector
 
-The [Step Inspector](../innoactive-creator/step-inspector.md) allows you to set a step name and description, as well as to create and edit behaviors, transitions, and conditions. The name and description of the step have no effect on the training course itself. Use them to keep notes for yourself and other trainers. To add a behavior, click on an `Add Behavior` button in the step's view. To delete a behavior, click on the `[x]` button next to it. The same applies to transitions and conditions.
+The [Step Inspector](../innoactive-creator/step-inspector.md) allows you to set a step name and description, as well as to create and edit behaviors, transitions, and conditions. The name and description of the step have no effect on the training course itself. Use them to keep notes for yourself and other trainers. To add a behavior, click on an `Add Behavior` button in the step's view. To delete a behavior, click on the <img src="../images/step-inspector/icon_delete_dark.png" alt="Trash Can Icon" height="16px"/> button in the upper right corner. The same applies to transitions and conditions.
 
-1. Now, rename the first step of the training course to `Grab sphere`. Add a single `Grab Object` condition to its transition to the second step. Drag the previously created `Sphere` into the object field named `Grabbable object`. Add a description:
+1. Now, rename the first step of the training course to `Grab sphere`. Switch to the `Transitions` tab, and add a single `Grab Object` condition to its transition to the second step. Drag the previously created `Sphere` into the object field named `Grabbable object`. Add a description:
 
     > This step will be completed when the trainee grabs the training scene object with the name `Sphere`, which has the `Grabbable Property` attached.
 
-2. Open the second step in the [Step Inspector](../innoactive-creator/step-inspector.md). Rename it to `Bring to cube`. Add an `Object Nearby` condition to its transition to the third step. Set the `Range` to `1.5`, drag `Cube` and `Sphere` into the `First object` and `Second object` fields. Add a description:
+2. Open the second step in the [Step Inspector](../innoactive-creator/step-inspector.md). Rename it to `Bring to cube`. Add an `Object Nearby` condition to its transition to the third step. Set the `Range` to `1.5`, drag `Cube` and `Sphere` into the fields `First object` and `Second object`. Add a description:
 
     > This step will be completed when the center point of the `Sphere` is 1.5 units away from the center point of the `Cube`, which has a `Transform In Range Detector Property`.
 
@@ -125,9 +121,9 @@ The [Step Inspector](../innoactive-creator/step-inspector.md) allows you to set 
 
 #### Save and Load
 
-The [Workflow Editor](../innoactive-creator/workflow-editor.md) and [Step Inspector](../innoactive-creator/step-inspector.md) automatically save all changes you make.
+The [Workflow window](../innoactive-creator/workflow-window.md) and [Step Inspector](../innoactive-creator/step-inspector.md) automatically save all changes you make.
 
-You can open any selected training course by clicking the `Open in Workflow Editor` button in the `Inspector` tab of the `[TRAINING_CONFIGURATION]` game object. You can find this game object in your scene.
+You can open any selected training course by clicking the `Open in Workflow window` button in the `Inspector` tab of the `[TRAINING_CONFIGURATION]` game object. You can find this game object in your scene.
 
 > Learn more about the [Training Configuration](../innoactive-creator/training-configuration.md).
 
@@ -181,9 +177,6 @@ The `Default` template scene accepts `.json` files as a source of localization d
 
 The localization files must be named by the two-letter ISO code of the respective language (`en.json` or `de.json`). Save them to the `[YOUR_PROJECT_ROOT_FOLDER]/Assets/StreamingAssets/Training/[YOUR_COURSE_NAME]/Localization` folder. The script automatically loads all available localizations and displays them in the language dropdown menu. If there is no respective language pack, the localization file is ignored.
 
-> You can add language packs there: `Windows Settings > Time and Language > Language > Add a language`.
-> Learn more about [Text to Speech](../miscellaneous/setup-text-to-speech.md).
-
 ### Audio Behavior
 
 In the [Step Inspector](../innoactive-creator/step-inspector.md), you can add either `Play TTS Audio` or `Play Audio File` behavior to a step. It has two parameters:
@@ -199,8 +192,6 @@ Both types of audio behaviors use localized strings. With `Play Audio File`, it 
 2. In `Bring to cube` step, add a `Play TTS Audio` behavior with `Localization key` set to `put_sphere`.
 3. In `Move cube` step, add a `Play TTS Audio` behavior with `Localization key` set to `move_cube`.
 4. In `Move cube` step, add another `Play TTS Audio` behavior with `Execution stages` set to `After Step Execution` and `Localization key` set to `training_complete`. Mark it as a blocking behavior.
-
-> Don't forget to save the changes!
 
 ### Complete Example
 
